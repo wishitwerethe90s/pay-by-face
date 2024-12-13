@@ -1,50 +1,59 @@
 "use client";
 
 import React, { useState } from "react";
-import { Box, Button, Typography, TextField, IconButton } from "@mui/material";
+import {
+  Box,
+  Button,
+  Typography,
+  IconButton,
+  CircularProgress,
+} from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { useRouter } from "next/navigation";
 import VideoFeed from "@/components/VideoFeed";
 import axios from "axios";
-import { useRouter } from "next/navigation";
 
-export default function RegistrationPage() {
+export default function PaymentPage() {
   const [step, setStep] = useState(1);
-  const [name, setName] = useState("");
   // const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const handleNextStep = () => {
-    if (step === 1 && name.trim() !== "") {
-      setStep(2);
-    } else {
-      setStep(step + 1);
-    }
-  };
-
-  const handlePreviousStep = () => {
-    if (step > 1) {
-      setStep(step - 1);
-    }
-  };
-
-  const handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setName(event.target.value);
+  const bestPrediction = (faces: any[]) => {
+    return faces.reduce(
+      (prev, curr) => (curr.confidence > prev.confidence ? curr : prev),
+      faces[0]
+    );
   };
 
   const onCapture = async (image_b64: any) => {
     try {
       // setLoading(true); // Start loading
-      const response = await axios.post("http://localhost:5001/capture", {
-        // TODO: don't hardcode, set up proxy
-        name: name,
-        image: image_b64,
-      });
+      const response = await axios.post(
+        "http://localhost:5002/recognize_face",
+        {
+          // TODO: don't hardcode, set up proxy
+          image: image_b64,
+        }
+      );
       console.log("API Response:", response.data);
-      router.push("/registration/success");
+
+      const customer = bestPrediction(response.data.faces);
+
+      router.push(`/confirmation?custName=${customer.name}`);
     } catch (err) {
       console.error("Error during registration:", err);
       // TODO: take this up later
-      // router.push("/registration/failure");
+      //   router.push("/pay/failure");
+    }
+  };
+
+  const handleNextStep = () => {
+    setStep(step + 1);
+  };
+
+  const handlePreviousStep = () => {
+    if (step > 1) {
+      setStep(step - 1);
     }
   };
 
@@ -73,7 +82,7 @@ export default function RegistrationPage() {
           boxShadow: "0px 0px 10px rgba(0,0,0,0.5)",
         }}
       >
-        {step > 1 && (
+        {step < 2 && (
           <IconButton
             color="inherit"
             onClick={handlePreviousStep}
@@ -82,31 +91,30 @@ export default function RegistrationPage() {
             <ArrowBackIcon />
           </IconButton>
         )}
-
         {step === 1 && (
           <>
             <Typography variant="h4" gutterBottom>
-              Welcome! Let's get you registered.
+              Welcome to the Payment Gateway
             </Typography>
-            <TextField
-              label="Enter your name"
-              variant="outlined"
-              fullWidth
-              value={name}
-              onChange={handleNameChange}
-              InputProps={{ style: { color: "#fff" } }}
-              InputLabelProps={{ style: { color: "#fff" } }}
-              sx={{ ".MuiOutlinedInput-root": { borderColor: "#fff" } }}
-            />
+            <Typography variant="body1">
+              Click next to start the payment process.
+            </Typography>
             <Button
               variant="contained"
               color="primary"
               onClick={handleNextStep}
               fullWidth
-              sx={{ mt: 2 }}
-              disabled={name.trim() === ""}
             >
               Next
+            </Button>
+            <Button
+              variant="text"
+              color="info"
+              onClick={() => router.push("/registration")}
+              fullWidth
+              sx={{ mt: 2 }}
+            >
+              New user? Register here
             </Button>
           </>
         )}
@@ -114,7 +122,10 @@ export default function RegistrationPage() {
         {step === 2 && (
           <>
             <Typography variant="h4" gutterBottom>
-              Hi {name}, let's register your face.
+              Prepare for Face Scan
+            </Typography>
+            <Typography variant="body1">
+              Ensure your face is clearly visible in the frame.
             </Typography>
             <Button
               variant="contained"
@@ -122,13 +133,25 @@ export default function RegistrationPage() {
               onClick={handleNextStep}
               fullWidth
             >
-              Start Face Registration
+              Start Scan
             </Button>
           </>
         )}
 
         {step === 3 && (
-          <VideoFeed onCapture={onCapture} btnLabel="Register Face" />
+          <>
+            <IconButton
+              color="inherit"
+              onClick={handlePreviousStep}
+              sx={{ position: "absolute", top: 16, left: 16 }}
+            >
+              <ArrowBackIcon />
+            </IconButton>
+            <Typography variant="h4" gutterBottom>
+              Scanning Your Face...
+            </Typography>
+            <VideoFeed onCapture={onCapture} btnLabel="Pay" />
+          </>
         )}
       </Box>
     </Box>

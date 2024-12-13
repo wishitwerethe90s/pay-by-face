@@ -1,5 +1,5 @@
 "use client";
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState, useMemo } from "react";
 import Box from "@mui/material/Box";
 import {
   FaceDetector,
@@ -8,11 +8,16 @@ import {
 } from "@mediapipe/tasks-vision";
 import { Button } from "@mui/material";
 
-const VideoFeed = ({ onCapture, detectMultipleFaces = false }: any) => {
+const VideoFeed = ({
+  onCapture,
+  btnLabel,
+  detectMultipleFaces = false,
+}: any) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [faceDetector, setFaceDetector] = useState<FaceDetector | null>(null);
   const [ctx, setCtx] = useState<CanvasRenderingContext2D | null>(null);
+  const [isFaceDetected, setIsFaceDetected] = useState<boolean>(false);
 
   const handleCapture = async () => {
     /* 
@@ -39,6 +44,7 @@ const VideoFeed = ({ onCapture, detectMultipleFaces = false }: any) => {
     const initializeFaceDetector = async () => {
       const vision = await FilesetResolver.forVisionTasks("/models/wasm");
       const detector = await FaceDetector.createFromOptions(vision, {
+        minDetectionConfidence: 0.9,
         baseOptions: {
           modelAssetPath: `/models/blaze_face_short_range.tflite`,
           delegate: "CPU",
@@ -93,7 +99,7 @@ const VideoFeed = ({ onCapture, detectMultipleFaces = false }: any) => {
     const startTimeMs = performance.now();
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-    const detections = await faceDetector.detectForVideo(video, startTimeMs);
+    const detections = faceDetector.detectForVideo(video, startTimeMs);
     displayVideoDetections(detections.detections);
 
     window.requestAnimationFrame(predictWebcam);
@@ -103,7 +109,11 @@ const VideoFeed = ({ onCapture, detectMultipleFaces = false }: any) => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
     if (!canvas || !video || !ctx) return;
-    if (detections.length === 0) return;
+    if (detections.length === 0) {
+      setIsFaceDetected(false);
+      return;
+    }
+    setIsFaceDetected(true);
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
@@ -174,11 +184,12 @@ const VideoFeed = ({ onCapture, detectMultipleFaces = false }: any) => {
       <Button
         variant="contained"
         color="primary"
+        disabled={!isFaceDetected}
         onClick={() => handleCapture()}
         fullWidth
         sx={{ mt: 2 }}
       >
-        Register Face
+        {isFaceDetected ? btnLabel : "Detecting Face..."}
       </Button>
     </>
   );
