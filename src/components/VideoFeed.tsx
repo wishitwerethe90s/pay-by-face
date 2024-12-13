@@ -7,7 +7,6 @@ import {
   Detection,
 } from "@mediapipe/tasks-vision";
 import { Button } from "@mui/material";
-import axios from "axios";
 
 const VideoFeed = ({ onCapture, detectMultipleFaces = false }: any) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -104,6 +103,7 @@ const VideoFeed = ({ onCapture, detectMultipleFaces = false }: any) => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
     if (!canvas || !video || !ctx) return;
+    if (detections.length === 0) return;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);

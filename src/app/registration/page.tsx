@@ -32,8 +32,10 @@ export default function RegistrationPage() {
   const onCapture = async (image_b64: any) => {
     try {
       // setLoading(true); // Start loading
-      const response = await axios.post("/api/capture", {
-        data: { name: name, image: image_b64 },
+      const response = await axios.post("http://localhost:5001/capture", {
+        // TODO: don't hardcode, set up proxy
+        name: name,
+        image: image_b64,
       });
       console.log("API Response:", response.data);
     } catch (err) {
