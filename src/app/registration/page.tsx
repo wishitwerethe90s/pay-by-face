@@ -50,7 +50,7 @@ export default function RegistrationPage() {
   //   return true;
   // };
 
-  const handleInput = (fieldName: string, value: string) => {
+  const onInputChange = (fieldName: string, value: string) => {
     setCredentials({ ...credentials, [fieldName]: value });
   };
 
@@ -76,90 +76,170 @@ export default function RegistrationPage() {
     }
   };
 
-  const RegistrationFlow = () => {
-    return (
-      <>
-        {step > 1 && (
-          <IconButton
-            color="inherit"
-            onClick={handlePreviousStep}
-            sx={{ alignSelf: "flex-start" }}
-            edge="start"
-          >
-            <ArrowBackIcon />
-          </IconButton>
-        )}
+  // TODO: How to incorporte like this in a better way?
+  // const RegistrationFlow = ({ credentials, onInputChange }: any) => {
+  //   return (
+  //     <>
+  //       {step > 1 && (
+  //         <IconButton
+  //           color="inherit"
+  //           onClick={handlePreviousStep}
+  //           sx={{ alignSelf: "flex-start" }}
+  //           edge="start"
+  //         >
+  //           <ArrowBackIcon />
+  //         </IconButton>
+  //       )}
 
-        {step === 1 && (
-          <>
-            <Typography variant="h4" gutterBottom>
-              Welcome to HDFC Pay by Face! Let's get you registered.
-            </Typography>
-            {/* TODO: Why are textfields focusing out after one character input? */}
-            <TextField
-              label="Enter your Name"
-              variant="outlined"
-              fullWidth
-              value={credentials.name}
-              onChange={(e) => handleInput("name", e.target.value)}
-              InputProps={{ style: { color: "#fff" } }}
-              InputLabelProps={{ style: { color: "#fff" } }}
-              sx={{ ".MuiOutlinedInput-root": { borderColor: "#fff" } }}
-            />
-            <TextField
-              label="Enter registered Phone Number"
-              variant="outlined"
-              type="tel"
-              fullWidth
-              value={credentials.phone}
-              onChange={(e) => handleInput("phone", e.target.value)}
-              InputProps={{ style: { color: "#fff" } }}
-              InputLabelProps={{ style: { color: "#fff" } }}
-              sx={{ ".MuiOutlinedInput-root": { borderColor: "#fff" } }}
-            />
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={handleNextStep}
-              fullWidth
-              sx={{ mt: 2 }}
-              disabled={
-                !Boolean(credentials.name.trim()) ||
-                !Boolean(credentials.phone.trim())
-              }
-            >
-              Next
-            </Button>
-          </>
-        )}
+  //       {step === 1 && (
+  //         <>
+  //           <Typography variant="h4" gutterBottom>
+  //             Welcome to HDFC Pay by Face! Let's get you registered.
+  //           </Typography>
+  //           {/* TODO: Why are textfields focusing out after one character input? */}
+  //           <TextField
+  //             label="Enter your Name"
+  //             variant="outlined"
+  //             fullWidth
+  //             value={credentials.name}
+  //             onInputChange={(e) => onInputChange("name", e.target.value)}
+  //             InputProps={{ style: { color: "#fff" } }}
+  //             InputLabelProps={{ style: { color: "#fff" } }}
+  //             sx={{ ".MuiOutlinedInput-root": { borderColor: "#fff" } }}
+  //           />
+  //           <TextField
+  //             label="Enter registered Phone Number"
+  //             variant="outlined"
+  //             type="tel"
+  //             fullWidth
+  //             value={credentials.phone}
+  //             onInputChange={(e) => onInputChange("phone", e.target.value)}
+  //             InputProps={{ style: { color: "#fff" } }}
+  //             InputLabelProps={{ style: { color: "#fff" } }}
+  //             sx={{ ".MuiOutlinedInput-root": { borderColor: "#fff" } }}
+  //           />
+  //           <Button
+  //             variant="contained"
+  //             color="primary"
+  //             onClick={handleNextStep}
+  //             fullWidth
+  //             sx={{ mt: 2 }}
+  //             disabled={
+  //               !Boolean(credentials.name.trim()) ||
+  //               !Boolean(credentials.phone.trim())
+  //             }
+  //           >
+  //             Next
+  //           </Button>
+  //         </>
+  //       )}
 
-        {step === 2 && (
-          <>
-            <Typography variant="h4">
-              {/* // TODO: personalize: get name from API call... */}
-              Hi {credentials.name}, let's register your face.
-            </Typography>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={handleNextStep}
-              fullWidth
-            >
-              Start Face Registration
-            </Button>
-          </>
-        )}
+  //       {step === 2 && (
+  //         <>
+  //           <Typography variant="h4">
+  //             {/* // TODO: personalize: get name from API call... */}
+  //             Hi {credentials.name}, let's register your face.
+  //           </Typography>
+  //           <Button
+  //             variant="contained"
+  //             color="primary"
+  //             onClick={handleNextStep}
+  //             fullWidth
+  //           >
+  //             Start Face Registration
+  //           </Button>
+  //         </>
+  //       )}
 
-        {step === 3 && (
-          <VideoFeed onCapture={onCapture} btnLabel="Register Face" />
-        )}
-      </>
-    );
-  };
+  //       {step === 3 && (
+  //         <VideoFeed onCapture={onCapture} btnLabel="Register Face" />
+  //       )}
+  //     </>
+  //   );
+  // };
 
   return (
     <ResponsiveView>
-      {loading ? <CircularProgress /> : <RegistrationFlow />}
+      {loading ? (
+        <CircularProgress />
+      ) : (
+        <>
+          {step > 1 && (
+            <IconButton
+              color="inherit"
+              onClick={handlePreviousStep}
+              sx={{ alignSelf: "flex-start" }}
+              edge="start"
+            >
+              <ArrowBackIcon />
+            </IconButton>
+          )}
+
+          {step === 1 && (
+            <>
+              <Typography variant="h4" gutterBottom>
+                Welcome to HDFC Pay by Face! Let's get you registered.
+              </Typography>
+              {/* TODO: Why are textfields focusing out after one character input? */}
+              <TextField
+                label="Enter your Name"
+                variant="outlined"
+                fullWidth
+                value={credentials.name}
+                onChange={(e) => onInputChange("name", e.target.value)}
+                InputProps={{ style: { color: "#fff" } }}
+                InputLabelProps={{ style: { color: "#fff" } }}
+                sx={{ ".MuiOutlinedInput-root": { borderColor: "#fff" } }}
+              />
+              <TextField
+                label="Enter registered Phone Number"
+                variant="outlined"
+                type="tel"
+                fullWidth
+                value={credentials.phone}
+                onChange={(e) => onInputChange("phone", e.target.value)}
+                InputProps={{ style: { color: "#fff" } }}
+                InputLabelProps={{ style: { color: "#fff" } }}
+                sx={{ ".MuiOutlinedInput-root": { borderColor: "#fff" } }}
+              />
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleNextStep}
+                fullWidth
+                sx={{ mt: 2 }}
+                disabled={
+                  !Boolean(credentials.name.trim()) ||
+                  !Boolean(credentials.phone.trim())
+                }
+              >
+                Next
+              </Button>
+            </>
+          )}
+
+          {step === 2 && (
+            <>
+              <Typography variant="h4">
+                {/* // TODO: personalize: get name from API call... */}
+                Hi {credentials.name}, let's register your face.
+              </Typography>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleNextStep}
+                fullWidth
+              >
+                Start Face Registration
+              </Button>
+            </>
+          )}
+
+          {step === 3 && (
+            <VideoFeed onCapture={onCapture} btnLabel="Register Face" />
+          )}
+        </>
+      )}
     </ResponsiveView>
   );
 }
