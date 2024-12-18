@@ -1,20 +1,38 @@
 "use client";
 
 import React, { useState } from "react";
-import { Box, Button, Typography, TextField, IconButton } from "@mui/material";
+import {
+  Box,
+  Button,
+  Typography,
+  TextField,
+  IconButton,
+  CircularProgress,
+} from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import VideoFeed from "@/components/VideoFeed";
 import axios from "axios";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { numbersRegex, phoneNumberRegex } from "@/utils/regex";
+import ResponsiveView from "@/components/Container";
 
 export default function RegistrationPage() {
   const [step, setStep] = useState(1);
-  const [name, setName] = useState("");
-  // const [loading, setLoading] = useState(false);
+  const [credentials, setCredentials] = useState({ name: "", phone: "" });
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const orderDetails = {
+    orderId: searchParams.get("orderId") || null,
+    amount: searchParams.get("amount") || null,
+  };
 
   const handleNextStep = () => {
-    if (step === 1 && name.trim() !== "") {
+    if (
+      step === 1 &&
+      !Boolean(credentials.name.trim()) &&
+      !Boolean(credentials.phone.trim())
+    ) {
       setStep(2);
     } else {
       setStep(step + 1);
@@ -27,57 +45,49 @@ export default function RegistrationPage() {
     }
   };
 
-  const handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setName(event.target.value);
+  // TODO: add field validation for phone
+  // const phoneValidations = (value: string): boolean => {
+  //   if (value && !value.match(numbersRegex) && value.length > 10) return false;
+  //   return true;
+  // };
+
+  const handleInput = (fieldName: string, value: string) => {
+    setCredentials({ ...credentials, [fieldName]: value });
   };
 
   const onCapture = async (image_b64: any) => {
     try {
-      // setLoading(true); // Start loading
-      const response = await axios.post("http://localhost:5001/capture", {
+      setLoading(true); // Start loading
+      const response = await axios.post("http://172.20.10.5:5000/capture", {
         // TODO: don't hardcode, set up proxy
-        name: name,
+        name: credentials.name,
         image: image_b64,
       });
       console.log("API Response:", response.data);
-      router.push("/registration/success");
+      router.push(
+        `/registration/confirmation?status=success${
+          orderDetails.amount &&
+          orderDetails.orderId &&
+          `&orderId=${orderDetails.orderId}&amount=${orderDetails.amount}`
+        }`
+      );
     } catch (err) {
       console.error("Error during registration:", err);
-      // TODO: take this up later
-      // router.push("/registration/failure");
+      router.push("/registration/confirmation?status=failure");
+    } finally {
+      setLoading(false);
     }
   };
 
-  return (
-    <Box
-      sx={{
-        height: "100vh",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        bgcolor: "#121212",
-        color: "#fff",
-      }}
-    >
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          gap: 2,
-          width: "100%",
-          maxWidth: 400,
-          p: 3,
-          borderRadius: 2,
-          bgcolor: "#1E1E1E",
-          boxShadow: "0px 0px 10px rgba(0,0,0,0.5)",
-        }}
-      >
+  const RegistrationFlow = () => {
+    return (
+      <>
         {step > 1 && (
           <IconButton
             color="inherit"
             onClick={handlePreviousStep}
-            sx={{ position: "absolute", top: 16, left: 16 }}
+            sx={{ alignSelf: "flex-start" }}
+            edge="start"
           >
             <ArrowBackIcon />
           </IconButton>
@@ -86,14 +96,26 @@ export default function RegistrationPage() {
         {step === 1 && (
           <>
             <Typography variant="h4" gutterBottom>
-              Welcome! Let's get you registered.
+              Welcome to HDFC Pay by Face! Let's get you registered.
             </Typography>
+            {/* TODO: Why are textfields focusing out after one character input? */}
             <TextField
-              label="Enter your name"
+              label="Enter your Name"
               variant="outlined"
               fullWidth
-              value={name}
-              onChange={handleNameChange}
+              value={credentials.name}
+              onChange={(e) => handleInput("name", e.target.value)}
+              InputProps={{ style: { color: "#fff" } }}
+              InputLabelProps={{ style: { color: "#fff" } }}
+              sx={{ ".MuiOutlinedInput-root": { borderColor: "#fff" } }}
+            />
+            <TextField
+              label="Enter registered Phone Number"
+              variant="outlined"
+              type="tel"
+              fullWidth
+              value={credentials.phone}
+              onChange={(e) => handleInput("phone", e.target.value)}
               InputProps={{ style: { color: "#fff" } }}
               InputLabelProps={{ style: { color: "#fff" } }}
               sx={{ ".MuiOutlinedInput-root": { borderColor: "#fff" } }}
@@ -104,7 +126,10 @@ export default function RegistrationPage() {
               onClick={handleNextStep}
               fullWidth
               sx={{ mt: 2 }}
-              disabled={name.trim() === ""}
+              disabled={
+                !Boolean(credentials.name.trim()) ||
+                !Boolean(credentials.phone.trim())
+              }
             >
               Next
             </Button>
@@ -114,7 +139,8 @@ export default function RegistrationPage() {
         {step === 2 && (
           <>
             <Typography variant="h4" gutterBottom>
-              Hi {name}, let's register your face.
+              {/* // TODO: personalize: get name from API call... */}
+              Hi {credentials.name}, let's register your face.
             </Typography>
             <Button
               variant="contained"
@@ -130,7 +156,13 @@ export default function RegistrationPage() {
         {step === 3 && (
           <VideoFeed onCapture={onCapture} btnLabel="Register Face" />
         )}
-      </Box>
-    </Box>
+      </>
+    );
+  };
+
+  return (
+    <ResponsiveView>
+      {loading ? <CircularProgress /> : <RegistrationFlow />}
+    </ResponsiveView>
   );
 }

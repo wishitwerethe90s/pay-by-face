@@ -7,17 +7,26 @@ import {
   Detection,
 } from "@mediapipe/tasks-vision";
 import { Button } from "@mui/material";
+import { BOUNDING_BOX_DIMS } from "@/constants/constants";
 
 const VideoFeed = ({
   onCapture,
   btnLabel,
   detectMultipleFaces = false,
 }: any) => {
+  const video: any = {};
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [faceDetector, setFaceDetector] = useState<FaceDetector | null>(null);
   const [ctx, setCtx] = useState<CanvasRenderingContext2D | null>(null);
   const [isFaceDetected, setIsFaceDetected] = useState<boolean>(false);
+  const [faceBox, setFaceBox] = useState<any>({
+    x: null,
+    y: null,
+    width: null,
+    height: null,
+  });
+  const [step, setStep] = useState(1);
 
   const handleCapture = async () => {
     /* 
@@ -31,8 +40,32 @@ const VideoFeed = ({
     const canvas = canvasRef.current;
     const video = videoRef.current;
     if (!canvas || !video) return;
+
+    // TODO: figure out how to add extra image space on all sides (15%)
+    const image_coords = {
+      x: Math.min(faceBox.x, canvas.width - faceBox.width),
+      y: Math.min(faceBox.y, canvas.height - faceBox.height),
+      width: faceBox.width,
+      height: faceBox.height,
+    };
+
     ctx?.clearRect(0, 0, canvas.width, canvas.height);
-    ctx?.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    canvas.width = BOUNDING_BOX_DIMS.width;
+    canvas.height = BOUNDING_BOX_DIMS.height;
+
+    ctx?.drawImage(
+      video,
+      image_coords.x,
+      image_coords.y,
+      image_coords.width,
+      image_coords.height,
+      0,
+      0,
+      BOUNDING_BOX_DIMS.width,
+      BOUNDING_BOX_DIMS.height
+    );
+
     const image = canvas.toDataURL("image/jpeg");
 
     if (onCapture) {
@@ -58,7 +91,7 @@ const VideoFeed = ({
 
     initializeFaceDetector();
 
-    // Cleanup function to stop the video stream when the component unmounts
+    // Cleanup function to stop the video stream when the component unmounts - TODO: not working!
     return () => {
       if (videoRef.current && videoRef.current.srcObject) {
         const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
@@ -91,8 +124,7 @@ const VideoFeed = ({
     if (!faceDetector || !videoRef.current) return;
     const video = videoRef.current;
     const canvas = canvasRef.current;
-    if (!canvas) return;
-    if (!ctx) return;
+    if (!canvas || !ctx) return;
 
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
@@ -152,6 +184,15 @@ const VideoFeed = ({
       );
 
       if (focusedBox.boundingBox) {
+        const box = {
+          x: focusedBox.boundingBox.originX,
+          y: focusedBox.boundingBox.originY,
+          width: focusedBox.boundingBox.width,
+          height: focusedBox.boundingBox.height,
+        };
+
+        setFaceBox(box);
+
         ctx.strokeStyle = "#00FF00";
         ctx.lineWidth = 2;
         ctx.strokeRect(

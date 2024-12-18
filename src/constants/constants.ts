@@ -1,0 +1,1 @@
+export const BOUNDING_BOX_DIMS = {width: 500, height: 500};

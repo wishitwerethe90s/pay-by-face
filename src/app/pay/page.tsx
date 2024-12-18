@@ -2,34 +2,34 @@
 
 import React, { useState } from "react";
 import {
-  Box,
   Button,
   Typography,
   IconButton,
   CircularProgress,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import VideoFeed from "@/components/VideoFeed";
 import axios from "axios";
+import TxnDetails from "@/components/TxnDetails";
+import ResponsiveView from "@/components/Container";
+import { bestPrediction } from "@/utils/face-detection-utils";
 
 export default function PaymentPage() {
-  const [step, setStep] = useState(1);
-  // const [loading, setLoading] = useState(false);
   const router = useRouter();
-
-  const bestPrediction = (faces: any[]) => {
-    return faces.reduce(
-      (prev, curr) => (curr.confidence > prev.confidence ? curr : prev),
-      faces[0]
-    );
+  const searchParams = useSearchParams();
+  const [step, setStep] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const orderDetails = {
+    orderId: searchParams.get("orderId") || null,
+    amount: searchParams.get("amount") || null,
   };
 
   const onCapture = async (image_b64: any) => {
     try {
-      // setLoading(true); // Start loading
+      setLoading(true); // Start loading
       const response = await axios.post(
-        "http://localhost:5002/recognize_face",
+        "http://172.20.10.5:5000/recognize_face_faiss",
         {
           // TODO: don't hardcode, set up proxy
           image: image_b64,
@@ -39,11 +39,14 @@ export default function PaymentPage() {
 
       const customer = bestPrediction(response.data.faces);
 
-      router.push(`/confirmation?custName=${customer.name}`);
+      router.push(
+        `/confirmation?status=success&custName=${customer.name}&orderId=${orderDetails.orderId}&amount=${orderDetails.amount}`
+      );
     } catch (err) {
+      router.push("/confirmation?status=failure");
       console.error("Error during registration:", err);
-      // TODO: take this up later
-      //   router.push("/pay/failure");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -57,46 +60,24 @@ export default function PaymentPage() {
     }
   };
 
-  return (
-    <Box
-      sx={{
-        height: "100vh",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        bgcolor: "#121212",
-        color: "#fff",
-      }}
-    >
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          gap: 2,
-          width: "100%",
-          maxWidth: 400,
-          p: 3,
-          borderRadius: 2,
-          bgcolor: "#1E1E1E",
-          boxShadow: "0px 0px 10px rgba(0,0,0,0.5)",
-        }}
-      >
-        {step < 2 && (
+  const PaymentFlow = () => {
+    return (
+      <>
+        {step > 1 && (
           <IconButton
             color="inherit"
             onClick={handlePreviousStep}
-            sx={{ position: "absolute", top: 16, left: 16 }}
+            sx={{ alignSelf: "flex-start" }}
+            edge="start"
           >
             <ArrowBackIcon />
           </IconButton>
         )}
         {step === 1 && (
           <>
-            <Typography variant="h4" gutterBottom>
-              Welcome to the Payment Gateway
-            </Typography>
-            <Typography variant="body1">
+            <Typography variant="h4">Welcome to HDFC Pay By Face</Typography>
+            <TxnDetails orderDetails={orderDetails} />
+            <Typography variant="body2">
               Click next to start the payment process.
             </Typography>
             <Button
@@ -110,7 +91,11 @@ export default function PaymentPage() {
             <Button
               variant="text"
               color="info"
-              onClick={() => router.push("/registration")}
+              onClick={() =>
+                router.push(
+                  `/registration?reroute=/pay?orderId=${orderDetails.orderId}&amount=${orderDetails.amount}`
+                )
+              }
               fullWidth
               sx={{ mt: 2 }}
             >
@@ -121,10 +106,9 @@ export default function PaymentPage() {
 
         {step === 2 && (
           <>
-            <Typography variant="h4" gutterBottom>
-              Prepare for Face Scan
-            </Typography>
-            <Typography variant="body1">
+            <Typography variant="h4">Prepare for Face Scan</Typography>
+            <TxnDetails orderDetails={orderDetails} />
+            <Typography variant="body2">
               Ensure your face is clearly visible in the frame.
             </Typography>
             <Button
@@ -140,20 +124,19 @@ export default function PaymentPage() {
 
         {step === 3 && (
           <>
-            <IconButton
-              color="inherit"
-              onClick={handlePreviousStep}
-              sx={{ position: "absolute", top: 16, left: 16 }}
-            >
-              <ArrowBackIcon />
-            </IconButton>
             <Typography variant="h4" gutterBottom>
               Scanning Your Face...
             </Typography>
             <VideoFeed onCapture={onCapture} btnLabel="Pay" />
           </>
         )}
-      </Box>
-    </Box>
+      </>
+    );
+  };
+
+  return (
+    <ResponsiveView>
+      {loading ? <CircularProgress /> : <PaymentFlow />}
+    </ResponsiveView>
   );
 }

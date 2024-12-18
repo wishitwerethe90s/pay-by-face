@@ -8,8 +8,10 @@ export default function ConfirmationPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const custName = searchParams.get("custName");
+  const txnAmt = searchParams.get("amount");
+  const accNo = searchParams.get("accNo");
 
-  const isSuccess = custName !== "undefined";
+  const isSuccess = custName !== "null";
 
   return (
     <Box
@@ -40,6 +42,9 @@ export default function ConfirmationPage() {
           <>
             <Typography variant="h4" gutterBottom>
               Payment Successful 🎉
+            </Typography>
+            <Typography variant="h5">
+              Amount {txnAmt} is debited from your account {accNo}
             </Typography>
             <Typography variant="body1" align="center">
               Hi {custName}, your payment has been processed successfully!
