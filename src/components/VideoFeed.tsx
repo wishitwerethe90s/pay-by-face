@@ -49,6 +49,13 @@ const VideoFeed = ({
       height: faceBox.height,
     };
 
+    const image_coords_padding = {
+      x: image_coords.x - 0.15 * image_coords.width,
+      y: image_coords.y - 0.25 * image_coords.height,
+      width: image_coords.width * 1.3,
+      height: image_coords.height * 1.3,
+    };
+
     ctx?.clearRect(0, 0, canvas.width, canvas.height);
 
     canvas.width = BOUNDING_BOX_DIMS.width;
@@ -56,10 +63,10 @@ const VideoFeed = ({
 
     ctx?.drawImage(
       video,
-      image_coords.x,
-      image_coords.y,
-      image_coords.width,
-      image_coords.height,
+      image_coords_padding.x,
+      image_coords_padding.y,
+      image_coords_padding.width,
+      image_coords_padding.height,
       0,
       0,
       BOUNDING_BOX_DIMS.width,
@@ -67,6 +74,7 @@ const VideoFeed = ({
     );
 
     const image = canvas.toDataURL("image/jpeg");
+    // console.log(image);
 
     if (onCapture) {
       await onCapture(image);

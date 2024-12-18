@@ -22,9 +22,8 @@ export default function RegistrationPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const orderDetails = {
-    orderId: searchParams.get("orderId") || null,
-    amount: searchParams.get("amount") || null,
+  const reroute = {
+    reroute: searchParams.get("reroute") || null,
   };
 
   const handleNextStep = () => {
@@ -58,7 +57,7 @@ export default function RegistrationPage() {
   const onCapture = async (image_b64: any) => {
     try {
       setLoading(true); // Start loading
-      const response = await axios.post("http://172.20.10.5:5000/capture", {
+      const response = await axios.post("http://172.20.10.5:5000/register", {
         // TODO: don't hardcode, set up proxy
         name: credentials.name,
         image: image_b64,
@@ -66,9 +65,7 @@ export default function RegistrationPage() {
       console.log("API Response:", response.data);
       router.push(
         `/registration/confirmation?status=success${
-          orderDetails.amount &&
-          orderDetails.orderId &&
-          `&orderId=${orderDetails.orderId}&amount=${orderDetails.amount}`
+          reroute && `&reroute=${reroute}`
         }`
       );
     } catch (err) {
@@ -138,7 +135,7 @@ export default function RegistrationPage() {
 
         {step === 2 && (
           <>
-            <Typography variant="h4" gutterBottom>
+            <Typography variant="h4">
               {/* // TODO: personalize: get name from API call... */}
               Hi {credentials.name}, let's register your face.
             </Typography>
