@@ -35,13 +35,10 @@ export default function PaymentPage() {
   const onCapture = async (image_b64: any) => {
     try {
       setLoading(true); // Start loading
-      const response = await axios.post(
-        "http://172.20.10.5:5000/recognize_face",
-        {
-          // TODO: don't hardcode, set up proxy
-          image: image_b64,
-        }
-      );
+      const response = await axios.post("http://172.20.10.5:5000/recognize", {
+        // TODO: don't hardcode, set up proxy
+        image: image_b64,
+      });
       console.log("API Response:", response.data);
 
       // const customer = bestPrediction(response.data.faces);
@@ -51,7 +48,9 @@ export default function PaymentPage() {
         `/pay/confirmation?status=success&custName=${customer.name}&orderId=${orderDetails.orderId}&amount=${orderDetails.amount}`
       );
     } catch (err) {
-      router.push("/pay/confirmation?status=failure");
+      router.push(
+        `/pay/confirmation?status=failure&orderId=${orderDetails.orderId}&amount=${orderDetails.amount}`
+      );
       console.error("Error during registration:", err);
     } finally {
       setLoading(false);
