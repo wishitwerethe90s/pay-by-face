@@ -7,7 +7,7 @@ export default function RegistrationSuccess() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const status = searchParams.get("status");
-  const reroute = searchParams.get("reroute");
+  const reroute = searchParams.get("reroute") || null;
 
   const isSuccess = status === "success";
 
@@ -22,19 +22,21 @@ export default function RegistrationSuccess() {
         variant="contained"
         color="primary"
         onClick={() =>
-          isSuccess
-            ? reroute
-              ? router.push(`/pay/${reroute}`)
-              : router.push("/registration")
+          reroute
+            ? isSuccess
+              ? router.push(`/pay${reroute}`)
+              : router.push(
+                  `/registration?reroute=${encodeURIComponent(reroute)}`
+                )
             : router.push("/registration")
         }
         fullWidth
       >
-        {isSuccess
-          ? reroute
+        {reroute
+          ? isSuccess
             ? "Back to your payment..."
-            : "Register new user"
-          : "Try again"}
+            : "Try again"
+          : "Register new user"}
       </Button>
     </ResponsiveView>
   );

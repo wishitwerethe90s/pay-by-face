@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import {
-  Box,
   Button,
   Typography,
   TextField,
@@ -13,7 +12,6 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import VideoFeed from "@/components/VideoFeed";
 import axios from "axios";
 import { useRouter, useSearchParams } from "next/navigation";
-import { numbersRegex, phoneNumberRegex } from "@/utils/regex";
 import ResponsiveView from "@/components/Container";
 
 export default function RegistrationPage() {
@@ -22,9 +20,7 @@ export default function RegistrationPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const reroute = {
-    reroute: searchParams.get("reroute") || null,
-  };
+  const reroute = searchParams.get("reroute") || null;
 
   const handleNextStep = () => {
     if (
@@ -65,12 +61,16 @@ export default function RegistrationPage() {
       console.log("API Response:", response.data);
       router.push(
         `/registration/confirmation?status=success${
-          reroute && `&reroute=${reroute}`
+          reroute && `&reroute=${encodeURIComponent(reroute)}`
         }`
       );
     } catch (err) {
       console.error("Error during registration:", err);
-      router.push("/registration/confirmation?status=failure");
+      router.push(
+        `/registration/confirmation?status=failure${
+          reroute && `&reroute=${encodeURIComponent(reroute)}`
+        }`
+      );
     } finally {
       setLoading(false);
     }

@@ -4,3 +4,11 @@ export const bestPrediction = (faces: any[]) => {
       faces[0]
     );
   };
+
+export const bestDetection = (detections: any[]) => {
+  return detections.reduce(
+    (prev, curr) =>
+      curr.categories[0].score > prev.categories[0].score ? curr : prev,
+    detections[0]
+  );
+}

@@ -8,13 +8,13 @@ import {
 } from "@mediapipe/tasks-vision";
 import { Button } from "@mui/material";
 import { BOUNDING_BOX_DIMS } from "@/constants/constants";
+import { bestDetection } from "@/utils/face-detection-utils";
 
 const VideoFeed = ({
   onCapture,
   btnLabel,
   detectMultipleFaces = false,
 }: any) => {
-  const video: any = {};
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [faceDetector, setFaceDetector] = useState<FaceDetector | null>(null);
@@ -26,7 +26,6 @@ const VideoFeed = ({
     width: null,
     height: null,
   });
-  const [step, setStep] = useState(1);
 
   const handleCapture = async () => {
     /* 
@@ -155,6 +154,8 @@ const VideoFeed = ({
     }
     setIsFaceDetected(true);
 
+    // TODO: Liveness detection will come here
+
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
@@ -185,11 +186,7 @@ const VideoFeed = ({
         }
       });
     } else {
-      const focusedBox = detections.reduce(
-        (prev, curr) =>
-          curr.categories[0].score > prev.categories[0].score ? curr : prev,
-        detections[0]
-      );
+      const focusedBox = bestDetection(detections);
 
       if (focusedBox.boundingBox) {
         const box = {

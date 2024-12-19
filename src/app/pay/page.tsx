@@ -44,7 +44,8 @@ export default function PaymentPage() {
       );
       console.log("API Response:", response.data);
 
-      const customer = bestPrediction(response.data.faces);
+      // const customer = bestPrediction(response.data.faces);
+      const customer = response.data;
 
       router.push(
         `/pay/confirmation?status=success&custName=${customer.name}&orderId=${orderDetails.orderId}&amount=${orderDetails.amount}`
@@ -100,7 +101,9 @@ export default function PaymentPage() {
               color="info"
               onClick={() =>
                 router.push(
-                  `/registration?reroute=\?orderId\=${orderDetails.orderId}\&amount\=${orderDetails.amount}`
+                  `/registration?reroute=${encodeURIComponent(
+                    `?orderId=${orderDetails.orderId}&amount=${orderDetails.amount}`
+                  )}`
                 )
               }
               fullWidth
